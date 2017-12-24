@@ -85,3 +85,31 @@ td {
     text-align: center;
     font-family: 'Work Sans', sans-serif;
 }
+
+@media only screen and (max-width: 456px) {
+    body {
+        padding: 0;
+    }
+
+    .wrapper {
+        min-height: 387px;
+        min-width: 318px;
+    }
+
+    h1 {
+        font-size: 48.5px;
+    }
+
+    a {
+        font-size: 9.1px;
+        margin-bottom: 0.7em;
+    }
+
+    td {
+        width: 1.1em;
+        height: 1.1em;
+    }
+
+
+
+}
