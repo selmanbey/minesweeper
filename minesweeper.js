@@ -305,7 +305,7 @@ document.addEventListener("DOMContentLoaded", function() {
 
     var cells = document.querySelectorAll("td");
     
-    var mineTracker = placeMines(4);
+    var mineTracker = placeMines(25);
     var allCells = getAllIDs();
     var safeCells = findSafeCells(allCells, mineTracker);
     allCells.forEach(function(element){
