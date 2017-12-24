@@ -1,2 +1,5 @@
 # minesweeper
-Classic Minesweeper Game (Browser-based, Javascript)
+classic minesweeper game (browser-based, javascript)
+
+# play here:
+https://selmanbey.github.io/minesweeper/
