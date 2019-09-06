@@ -40,7 +40,7 @@ function initializeBoard(numberOfRows, numberOfColumns) {
     }
     board.append(row);
   }
-  document.querySelector(".board-wrapper").append(board);
+  document.querySelector("#board-wrapper").append(board);
   return board
 }
 
@@ -191,7 +191,7 @@ function filterBySafety(neighborTargets, safeTargets) {
 }
 
 function endGame(resultId, cells) {
-  // resultId should be "game-won" or "game-lost" (matching relevant <div>'s id)
+  // resultId should be "game-won" or "game-lost" (matching relevant <section>'s id)
   document.getElementById(resultId).style.display = "block";
   cells.forEach( cell => {
     cell.removeEventListener("click", handleLeftClick);
