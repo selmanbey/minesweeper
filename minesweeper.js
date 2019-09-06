@@ -1,320 +1,254 @@
-document.addEventListener("DOMContentLoaded", function() {
-    
-     /********************************************************
-     
-                            FUNCTIONS
-     
-     *********************************************************/
+/******************************************************************************/
+/***************************   GAME SETUP   ***********************************/
+/******************************************************************************/
+const COLUMN_NO = 16;
+const ROW_NO = 16;
+const MINE_NO = 25;
 
-    function getAllIDs() {
-    // Creates and returns a list containing all the IDs for all the cells
-        let allIDs = []
-        for(let i = 1; i < 16; i++) {
-            if (i < 10) {
-                for (let j = 1; j < 16; j++) {
-                    if (j < 10) {
-                        allIDs.push("0" + String(i) + "0" + String(j))
-                    } else {
-                        allIDs.push("0" + String(i) + String(j))
-                    }
-                }
-                
-            } else {
-                for (let j = 1; j < 16; j++) {
-                    if (j < 10) {
-                        allIDs.push(String(i) + "0" + String(j))
-                    } else {
-                        allIDs.push(String(i) + String(j))
-                    }
-                }
-            }
-        }
-        return allIDs
+let board;  // a <table> element
+let cells;  // all <td> elements
+let targets = {
+  all: undefined,  // [array] - all cell ids representing cells (e.g. "0742")
+  mined: undefined,  // [array] - only the ids for the mined cells
+  safe: undefined  // [array] - only the ids for empty cells
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+  board = initializeBoard(COLUMN_NO, ROW_NO);
+  cells = board.querySelectorAll("td");
+  targets.all = getAllTargets(cells);
+  targets.mined = placeMines(targets.all, MINE_NO);
+  targets.safe = findSafeTargets(targets.all, targets.mined)
+  cells.forEach( cell => {
+    cell.addEventListener("click", handleLeftClick);
+    cell.addEventListener("contextmenu", handleRightClick);
+  })
+});
+
+/******************************************************************************/
+/***********************   FUNCTION DECLARATIONS   ****************************/
+/******************************************************************************/
+
+function initializeBoard(numberOfRows, numberOfColumns) {
+  let board = document.createElement("table");
+  for (let rowNo = 1; rowNo <= numberOfRows; rowNo++) {
+    let row = document.createElement("tr");
+    for (let columnNo = 1; columnNo <= numberOfColumns; columnNo++) {
+      let cell = document.createElement("td");
+      cell.id = parseTwoDigitStr(rowNo) + parseTwoDigitStr(columnNo); // eg. "0612"
+      row.append(cell);
     }
+    board.append(row);
+  }
+  document.querySelector("#board-wrapper").append(board);
+  return board
+}
 
-    function findSafeCells(cells, mines) {
-    // Creates and returns a list containing the IDs of cells with no mines
-        let safeCells = []
-        cells.forEach(function(element){
-            if (mines.indexOf(element) === -1) {
-                safeCells.push(element)
-            }
-        })
-        return safeCells
+function parseTwoDigitStr(number) {
+  return number < 10 ? "0" + number.toString() : number.toString()
+};
+
+function getAllTargets(cells) {
+  return [...cells.values()].map( cell => cell.id )
+}
+
+function placeMines(allTargets, numberOfMines) {
+  let allMines = [];
+  for (let i = 0; i < numberOfMines; i++) {
+    let mine = allTargets[Math.floor(Math.random() * allTargets.length)];
+    while(allMines.includes(mine)) {
+      // in case if target is already mined
+      mine = allTargets[Math.floor(Math.random() * allTargets.length)];
     }
+    allMines.push(mine);
+  }
+  return allMines
+}
 
-    function randomizer() {
-    // Creates a random ID to pick a random cell to place a mine
-        function addZeroOrNot(){
-            let a = Math.round(Math.random() * 15);
-            while (a === 0) {
-                a = Math.round(Math.random() * 15);
-            }
-            if (a < 10) {
-                return String(0) + String(a);
-            } else {
-                return String(a);
-            };
-        }
+function findSafeTargets(allTargets, minedTargets) {
+  return allTargets.filter( target => !minedTargets.includes(target) )
+}
 
-        let x = addZeroOrNot();
-        let y = addZeroOrNot();
-        
-        let randomStringId = x + y;
-        
-        return randomStringId;
+function handleRightClick(e) {
+  e.preventDefault();
+  markCell(e.target)
+}
+
+function markCell(cell) {
+  if (cell.className !== "open") {
+    if (cell.className !== "marked") {
+      cell.className = "marked"
+    } else {
+      cell.className = ""
     }
+  }
+}
 
-    function placeMines(numberofMines) {
-    // Takes an integer as an argument (how many mines should be in the game) 
-    // Places the given number of mines in the game
-        let mineTracker = []
-        for (let i = 0; i < numberofMines; i++) {
-            let mineID = randomizer();
-            mineTracker.push(mineID);
-        }
-        return mineTracker;
+function handleLeftClick(e) {
+  e.preventDefault();
+  openCell(e.target, targets);
+}
+
+function openCell(cell, targets) {
+  if (cell.className !== "marked") {
+    revealCellContent(cell, targets);
+    let defeat = checkDefeat(cell.id, targets.mined);
+    if (defeat) {
+      revealMines(targets.mined, "mine-exploded");
+      revealSafeCells(targets);
+      endGame("game-lost", cells);
+    } else {
+      let victory = checkVictory(targets.safe);
+      if (victory) {
+        revealMines(targets.mined, "mine-avoided");
+        endGame("game-won", cells);
+      }
     }
+  }
+};
 
-    function findSurroundingCells(stringID) {
-    // Takes a cell ID as an argument
-    // Returns its neighbor cells' IDs as a list
-        let surroundingCells = [];
-        let n = parseInt(stringID);  // numberID
+function revealCellContent(cell, targets) {
+  let dangerLevel = assignDangerLevel(cell.id, targets);
+  if (dangerLevel === 0) {
+    cell.className = "open";
+    chainOpenNeighbors(cell, targets);
+  } else {
+    cell.innerHTML = dangerLevel
+    cell.className = "open";
+  }
+};
 
-        if (stringID[0] === "0" && stringID[1] === "1") {
-            if (n - 1 === "100") {
-                //pass
-            } else {
-                let temporaryList = [];  
-                temporaryList.push(String(n + 1), String(n - 1), String(n + 100), String(n + 99), 
-                                   String(n + 101));
-                temporaryList.forEach(function(element) {
-                    surroundingCells.push("0" + element)
-                })
-            }      
-        } else if (stringID[0] === "0" && stringID[1] === "9") {
-            surroundingCells.push("0" + String(n + 1), "0" + String(n - 1), "0" + String(n - 100), 
-                                  "0" + String(n - 99), "0" + String(n - 101), String(n + 100), 
-                                  String(n + 99), String(n + 101));
-        } else if (stringID[0] === "1" && stringID[1] === "0") {
-            surroundingCells.push(String(n + 1), String(n - 1), "0" + String(n - 100), "0" + 
-                                  String(n - 99), "0" + String(n - 101), String(n + 100), 
-                                  String(n + 99), String(n + 101));
-        } else if (stringID[0] === "0") { 
-            let temporaryList = [];  
-            temporaryList.push(String(n + 1), String(n - 1), String(n - 100), String(n - 99), 
-                               String(n - 101), String(n + 100), String(n + 99), String(n + 101));
-            temporaryList.forEach(function(element) {
-                surroundingCells.push("0" + element)
-            })
-        } else if (stringID[0] === "1" && stringID[1] === "5") {
-            surroundingCells.push(String(n + 1), String(n - 1), String(n - 100), String(n - 99), 
-                                  String(n - 101));
+function chainOpenNeighbors(cell, targets) {
+  /**
+    * @desc opens the empty neighbor cells in all directions recursively.
+    * @method creates a queue of neighbor cells to be checked,
+    * checks each cell, opens it showing it's danger level
+    * if the cell is empty, adds its empty neighbors to the queue,
+    * if the cell is dangerous, does not check its empty neighbors
+  */
+
+  let neighborTargets = findNeighborTargets(cell.id, targets.all);
+  safeNeighborTargets = filterBySafety(neighborTargets, targets.safe)
+
+  let targetSetToCheck = new Set(safeNeighborTargets) // set prevents duplicate targets
+  while( targetSetToCheck.size > 0 ) {
+    targetSetToCheck.forEach( cTarget => {
+      let cCell = document.getElementById(cTarget)
+      targetSetToCheck.delete(cTarget)
+
+      if(cCell.className !== "open") {
+        cCell.className = "open"
+        let dangerLevel = assignDangerLevel(cTarget, targets);
+        if(dangerLevel === 0) {
+          let newNeighborTargets = findNeighborTargets(cTarget, targets.all);
+          let newsafeNeighborTargets = filterBySafety(newNeighborTargets, targets.safe);
+          newsafeNeighborTargets.forEach( nsnTarget => targetSetToCheck.add(nsnTarget))
         } else {
-            surroundingCells.push(String(n + 1), String(n - 1), String(n - 100), String(n - 99), 
-                                  String(n - 101), String(n + 100), String(n + 99), String(n + 101));
-        };
-
-        finalList = []
-        surroundingCells.forEach(function(element) {
-            if (element[2] === "1" && element[3] === "6") {
-                //pass
-            } else if (element[2] === "0" && element[3] === "0") {
-                //pass
-            } else {
-                finalList.push(element)
-            }
-        });
-
-        return finalList
-    }
-
-    function getNumbered(stringID) {
-    // Takes a cell ID as an argument
-    // Finds how many mines are there in its neighbouring cells
-    // Gives the cell a class:
-    // ("empty": no mines around; "mine": cell itself is mine; number(1-8): number of mines around)
-        let surroundingCells = findSurroundingCells(stringID);;
-
-        var howManyMinesAround = 0
-        surroundingCells.forEach(function(element){
-            if (mineTracker.indexOf(element) !== -1) {
-                howManyMinesAround += 1;
-            };
-        })
-        
-        cell = document.getElementById(stringID)
-        if (howManyMinesAround === 0) {    
-            if(mineTracker.indexOf(stringID) === -1) {
-                cell.className = "empty"
-            } else {
-                cell.className = "mine"
-            }    
-        } else {
-            if(mineTracker.indexOf(stringID) === -1) {
-                cell.className = String(howManyMinesAround);
-            } else {
-                cell.className = "mine"
-            }
-        };
-    };
-
-    function getGameWonScreen(mines) {
-    // Takes the list of all mine IDs in the game
-    // Colors all of them green
-        mines.forEach(function(element){
-            let minedCell = document.getElementById(element)
-            minedCell.style.cssText = "background-color: #55895a";
-        })
-    }
-
-    function getGameLostScreen(mines, safes) {
-    // Takes two lists: One for mine IDs, the other for the ID's of the rest of the cells
-    // Opens all the cells (as if all of them has been clicked)
-    // Colors all mines black
-    // Displays all the numbered cells with number
-    // Leaves empty cells empty
-        mines.forEach(function (element) {
-            document.getElementById(element).style.cssText = "background-color: #000000";
-        })
-        safes.forEach(function(element) {
-            let cell = document.getElementById(element)
-            if (cell.className === "empty") {
-                cell.innerHTML = ""
-            } else {
-                if (cell.className === "open") {
-                    //pass
-                } else {
-                    cell.innerHTML = cell.className;
-                }
-            }     
-            cell.style.cssText = "background-color: #bed0f4";
-        })
-        document.querySelector(".gamelost").style.cssText = "display: block";
-    }
-
-    function openCell(stringID) {   
-    // Takes a cell ID as an argument
-    // Reveals its content to the player (empty, number or mine)
-    // Marks the cell as opened in the background (by changing its class to "opened")
-    // If the cell contains a mine ends the game
-        let cell = document.getElementById(stringID)
-        if (mineTracker.indexOf(stringID) === -1) {
-            if (cell.className === "empty") {
-                cell.style.cssText = "background-color: #bed0f4";
-                cell.className = "open";
-                openMultipleCellsAround(stringID)
-            } else {
-                if (cell.className === "open") {
-                    //pass
-                } else {
-                    cell.innerHTML = cell.className;
-                    cell.style.cssText = "background-color: #bed0f4";
-                    cell.className = "open";
-                }
-            }
-        } else {
-            cell.style.cssText = "background-color: #000000";
-            getGameLostScreen(mineTracker, safeCells); 
-        };
-    };
-
-    function chooseCell(){
-    // Gets the ID of the clicked cell
-    // Checks if all the safe cells are opened and declares victory if they are
-        let cellID = this.id;
-        openCell(cellID)
-        let gamestatus = false;
-        gamestatus = isGameWon();
-        if (gamestatus) {
-            getGameWonScreen(mineTracker);
-            document.querySelector(".gamewon").style.cssText = "display: block";
+          cCell.innerHTML = dangerLevel
         }
-    };
-
-    function markCell(event) {
-    // Gets the class of the clicked cell
-    // Changes its color (as "marked") to indicate player's guess that there is a mine under it
-        event.preventDefault();
-        if (this.className !== "open") {
-            this.style.cssText = "background-color: #900C3F";
-        }
-    };
-
-    function openMultipleCellsAround(stringID) {
-    // Takes a cell ID as an argument
-    // Keeps opening the surrounding cells of the surrounding cells until all the neighbouring
-    // empty cells are opened
-        var continueCondition = 1;
-        var centralCell = stringID;
-        var surroundingCells = findSurroundingCells(centralCell)
-        var checkList = []
-        var indexNumber = 0;
-        var possibleNumbers = ["1", "2", "3", "4", "5", "6"]
-        while (continueCondition > 0) {
-            surroundingCells.forEach(function(element) {
-                cell = document.getElementById(element)
-                if (mineTracker.indexOf(element) === -1 && 
-                cell.className !== "open" &&
-                cell.className === "empty") {
-                    cell.style.cssText = "background-color: #bed0f4";
-                    cell.className = "open";
-                    checkList.push(element)
-                } else if (mineTracker.indexOf(element) === -1 &&
-                possibleNumbers.indexOf(cell.className) !== -1) {
-                    cell.innerHTML = cell.className;
-                    cell.style.cssText = "background-color: #bed0f4";
-                    cell.className = "open";
-                }; 
-            });
-            centralCell = checkList[indexNumber];
-            if (indexNumber === checkList.length) {
-                continueCondition = 0;
-            } else {
-                surroundingCells = findSurroundingCells(centralCell)
-                indexNumber += 1;
-            }   
-        };
-    }
-
-    function isGameWon() {
-    // Checks if all the cells are opened or not
-    // Declares victory if they are
-        let allCells = []
-        safeCells.forEach(function(element) {
-            let cell = document.getElementById(element);
-            if (cell.className !== "open") {
-                allCells.push("false")
-            }
-        })
-        if (allCells.indexOf('false') !== -1) {
-            return false
-        } else {
-            return true
-        }
-    }
-
-
-    /********************************************************
-     
-                            GAME SETUP
-     
-     *********************************************************/
-
-
-    var cells = document.querySelectorAll("td");
-    
-    var mineTracker = placeMines(25);
-    var allCells = getAllIDs();
-    var safeCells = findSafeCells(allCells, mineTracker);
-    allCells.forEach(function(element){
-        getNumbered(element);
+      }
     })
+  }
+};
 
-    for (let i = 0; i < cells.length; i++) {
-        cells[i].addEventListener("click", chooseCell);
-        cells[i].addEventListener("contextmenu", markCell);
-    };
+function findNeighborTargets(target, allTargets) {
+  /**
+    * @desc finds all 8 neighboring cell ids for a given cell id
+    * filters non-existing cell ids to count for corners and edges
+    * returns a list
+  */
 
-}); 
+  let targetsRow = target.slice(0, 2);  // first two chars represent row
+  let targetsColumn = target.slice(2, 4);  // last two chars represent cell
+
+  let possibleNeighbors = [
+    plusOne(targetsRow) + minusOne(targetsColumn),
+    plusOne(targetsRow) + targetsColumn,
+    plusOne(targetsRow) + plusOne(targetsColumn),
+    targetsRow + minusOne(targetsColumn),
+    targetsRow + plusOne(targetsColumn),
+    minusOne(targetsRow) + minusOne(targetsColumn),
+    minusOne(targetsRow) + targetsColumn,
+    minusOne(targetsRow) + plusOne(targetsColumn),
+  ]
+
+  return possibleNeighbors.filter( nTarget => allTargets.includes(nTarget) )
+}
+
+function assignDangerLevel(target, targets) {
+  let neighborTargets = findNeighborTargets(target, targets.all)
+  let neighborMineCount = 0;
+  neighborTargets.forEach( nTarget => {
+    if (targets.mined.includes(nTarget)) {
+      neighborMineCount += 1;
+    }
+  })
+  return neighborMineCount
+}
+
+function filterBySafety(neighborTargets, safeTargets) {
+  return neighborTargets.filter( nTarget => safeTargets.includes(nTarget) );
+}
+
+function endGame(resultId, cells) {
+  // resultId should be "game-won" or "game-lost" (matching relevant <section>'s id)
+  document.getElementById(resultId).style.display = "block";
+  cells.forEach( cell => {
+    cell.removeEventListener("click", handleLeftClick);
+    cell.removeEventListener("contextmenu", handleRightClick);
+  })
+}
+
+function revealMines(mines, className) {
+  mines.forEach( mine => {
+    document.getElementById(mine).className = className
+  })
+}
+
+function revealSafeCells(targets) {
+  targets.safe.forEach( sTarget => {
+    let safeCell = document.getElementById(sTarget)
+    safeCell.className = "open"
+    dangerLevel = assignDangerLevel(safeCell.id, targets)
+    if (dangerLevel > 0) { safeCell.innerHTML = dangerLevel }
+  })
+}
+
+function checkDefeat(target, minedTargets) {
+  let defeat = false;
+  minedTargets.forEach( mTarget => {
+    if (target === mTarget) { defeat = true }
+  })
+  return defeat
+}
+
+function checkVictory(safeTargets) {
+  let victory = true
+  safeTargets.forEach( sTarget => {
+    let cell = document.getElementById(sTarget);
+    if (cell.className !== "open") { victory = false }
+  })
+  return victory
+}
+
+function plusOne(numberString) {
+  // takes a two-digit-number as string
+  // returns a two-digit-number as string
+  let number = parseInt(numberString) + 1
+  if(number < 10) {
+    return "0" + number.toString()
+  } else {
+    return number.toString()
+  }
+}
+
+function minusOne(numberString) {
+  // takes a two-digit-number as string
+  // returns a two-digit-number as string
+  let number = parseInt(numberString) - 1
+  if(number < 10) {
+    return "0" + number.toString()
+  } else {
+    return number.toString()
+  }
+}
