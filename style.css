@@ -56,6 +56,10 @@ td {
   position: relative;
 }
 
+.info-wrapper {
+  animation: bounceInRight 1s;
+}
+
 .game-result {
   display: none;
   position: absolute;
@@ -70,6 +74,7 @@ td {
   font-family: 'Work Sans', sans-serif;
   width: 30%;
   z-index: 1;
+  animation: jackInTheBox 1s;
 }
 
 #game-lost {
@@ -80,6 +85,10 @@ td {
 #game-won {
   color: #122013;
   border-color: #314e34;
+}
+
+#game-board {
+  animation: bounceInLeft 1s;
 }
 
 .open {
@@ -120,5 +129,95 @@ td {
   td {
     width: 1.1em;
     height: 1.1em;
+  }
+}
+
+/* ANIMATIONS
+ * https://github.com/daneden/animate.css
+*/
+
+@keyframes bounceInLeft {
+  from,
+  60%,
+  75%,
+  90%,
+  to {
+    animation-timing-function: cubic-bezier(0.215, 0.61, 0.355, 1);
+  }
+
+  0% {
+    opacity: 0;
+    transform: translate3d(-3000px, 0, 0);
+  }
+
+  60% {
+    opacity: 1;
+    transform: translate3d(25px, 0, 0);
+  }
+
+  75% {
+    transform: translate3d(-10px, 0, 0);
+  }
+
+  90% {
+    transform: translate3d(5px, 0, 0);
+  }
+
+  to {
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+@keyframes bounceInRight {
+  from,
+  60%,
+  75%,
+  90%,
+  to {
+    animation-timing-function: cubic-bezier(0.215, 0.61, 0.355, 1);
+  }
+
+  from {
+    opacity: 0;
+    transform: translate3d(3000px, 0, 0);
+  }
+
+  60% {
+    opacity: 1;
+    transform: translate3d(-25px, 0, 0);
+  }
+
+  75% {
+    transform: translate3d(10px, 0, 0);
+  }
+
+  90% {
+    transform: translate3d(-5px, 0, 0);
+  }
+
+  to {
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+
+@keyframes jackInTheBox {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.1) rotate(30deg);
+    transform-origin: center bottom;
+  }
+
+  50% {
+    transform: translate(-50%, -50%) rotate(-10deg);
+  }
+
+  70% {
+    transform: translate(-50%, -50%) rotate(3deg);
+  }
+
+  to {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
   }
 }
