@@ -25,22 +25,22 @@ p {
 }
 
 table {
+  margin: 0 auto;
   border: 3px solid #3f4b62;
   border-left: 2px solid #3f4b62;
   border-top: 2px solid #3f4b62;
   border-spacing: 0;
-  margin: 0 auto;
 }
 
 td {
-  border: 1px solid #3f4b62;
-  border-right: 0;
-  border-bottom: 0;
   width: 1.5em;
   height: 1.5em;
   background-color: #7e96c4;
-  text-align: center;
   font-family: 'Work Sans', sans-serif;
+  text-align: center;
+  border: 1px solid #3f4b62;
+  border-right: 0;
+  border-bottom: 0;
 }
 
 .wrapper {
@@ -56,36 +56,39 @@ td {
   position: relative;
 }
 
-#game-lost {
+.info-wrapper {
+  animation: bounceInRight 1s;
+}
+
+.game-result {
   display: none;
   position: absolute;
-  padding: 1em;
-  text-align: center;
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
+  width: 30%;
   margin: 0 auto;
-  width: 4.5em;
+  padding: 1em;
+  font-family: 'Work Sans', sans-serif;
+  text-align: center;
   background-color: #FFFFFF;
-  border: 3px solid #520915;
+  border: 3px solid;
+  z-index: 1;
+  animation: jackInTheBox 1s;
+}
+
+#game-lost {
   color: #2b030a;
-  font-family: 'Work Sans', sans-serif
+  border-color: #520915;
 }
 
 #game-won {
-  display: none;
-  position: absolute;
-  padding: 1em;
-  text-align: center;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  margin: 0 auto;
-  width: 6em;
-  background-color: #FFFFFF;
-  border: 3px solid #314e34;
   color: #122013;
-  font-family: 'Work Sans', sans-serif
+  border-color: #314e34;
+}
+
+#game-board {
+  animation: bounceInLeft 1s;
 }
 
 .open {
@@ -126,5 +129,73 @@ td {
   td {
     width: 1.1em;
     height: 1.1em;
+  }
+}
+
+/* ANIMATIONS
+ * https://github.com/daneden/animate.css
+*/
+
+@keyframes bounceInLeft {
+  from, 60%, 75%, 90%, to {
+    animation-timing-function: cubic-bezier(0.215, 0.61, 0.355, 1);
+  }
+  0% {
+    opacity: 0;
+    transform: translate3d(-3000px, 0, 0);
+  }
+  60% {
+    opacity: 1;
+    transform: translate3d(25px, 0, 0);
+  }
+  75% {
+    transform: translate3d(-10px, 0, 0);
+  }
+  90% {
+    transform: translate3d(5px, 0, 0);
+  }
+  to {
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+@keyframes bounceInRight {
+  from, 60%, 75%, 90%, to {
+    animation-timing-function: cubic-bezier(0.215, 0.61, 0.355, 1);
+  }
+  from {
+    opacity: 0;
+    transform: translate3d(3000px, 0, 0);
+  }
+  60% {
+    opacity: 1;
+    transform: translate3d(-25px, 0, 0);
+  }
+  75% {
+    transform: translate3d(10px, 0, 0);
+  }
+  90% {
+    transform: translate3d(-5px, 0, 0);
+  }
+  to {
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+@keyframes jackInTheBox {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.1) rotate(30deg);
+    transform-origin: center bottom;
+  }
+  50% {
+    transform: translate(-50%, -50%) rotate(-10deg);
+  }
+  70% {
+    transform: translate(-50%, -50%) rotate(3deg);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
   }
 }
