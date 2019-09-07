@@ -40,7 +40,7 @@ function initializeBoard(numberOfRows, numberOfColumns) {
     }
     board.append(row);
   }
-  document.querySelector("#board-wrapper").append(board);
+  document.querySelector(".board-wrapper").append(board);
   return board
 }
 

@@ -52,6 +52,10 @@ td {
   min-width: 415px;
 }
 
+.board-wrapper {
+  position: relative;
+}
+
 #game-lost {
   display: none;
   position: absolute;
