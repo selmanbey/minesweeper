@@ -23,6 +23,11 @@ document.addEventListener("DOMContentLoaded", () => {
     cell.addEventListener("click", handleLeftClick);
     cell.addEventListener("contextmenu", handleRightClick);
   })
+  document.querySelectorAll(".game-result").forEach( gameResultDiv => {
+    gameResultDiv.addEventListener("mouseover", makeRestartButton )
+    gameResultDiv.addEventListener("mouseleave", getGameResultBack )
+    gameResultDiv.addEventListener("click", restartGame )
+  })
 });
 
 /******************************************************************************/
@@ -31,6 +36,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
 function initializeBoard(numberOfRows, numberOfColumns) {
   let board = document.createElement("table");
+  board.id = "game-board";
   for (let rowNo = 1; rowNo <= numberOfRows; rowNo++) {
     let row = document.createElement("tr");
     for (let columnNo = 1; columnNo <= numberOfColumns; columnNo++) {
@@ -251,4 +257,16 @@ function minusOne(numberString) {
   } else {
     return number.toString()
   }
+}
+
+function makeRestartButton(e) {
+  e.target.innerHTML = "Play Again?"
+}
+
+function getGameResultBack(e) {
+  e.target.innerHTML = e.target.id === "game-won" ? "CONGRATS!" : "GAME OVER!"
+}
+
+function restartGame() {
+  window.location.reload();
 }

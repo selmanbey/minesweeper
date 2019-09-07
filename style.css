@@ -56,7 +56,7 @@ td {
   position: relative;
 }
 
-#game-lost {
+.game-result {
   display: none;
   position: absolute;
   padding: 1em;
@@ -65,27 +65,21 @@ td {
   left: 50%;
   transform: translate(-50%, -50%);
   margin: 0 auto;
-  width: 4.5em;
   background-color: #FFFFFF;
-  border: 3px solid #520915;
+  border: 3px solid;
+  font-family: 'Work Sans', sans-serif;
+  width: 30%;
+  z-index: 1;
+}
+
+#game-lost {
   color: #2b030a;
-  font-family: 'Work Sans', sans-serif
+  border-color: #520915;
 }
 
 #game-won {
-  display: none;
-  position: absolute;
-  padding: 1em;
-  text-align: center;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  margin: 0 auto;
-  width: 6em;
-  background-color: #FFFFFF;
-  border: 3px solid #314e34;
   color: #122013;
-  font-family: 'Work Sans', sans-serif
+  border-color: #314e34;
 }
 
 .open {
